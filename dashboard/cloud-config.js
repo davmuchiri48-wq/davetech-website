@@ -8,8 +8,8 @@
 const CLOUD = {
   url: 'https://esbpfejsnrzmmibtaika.supabase.co',
   anonKey: 'sb_publishable_5iNoTQrpQEUixoAK1tBF2g_oCBKLpvc',
-  // Where dist-web is hosted (Netlify etc.). Schools' websites are at <siteUrl>/s/<web-address>.
-  siteUrl: 'https://davetech-website-azyw.onrender.com',
+  // Where dist-web is hosted (Netlify, from the davetech-website GitHub project). Schools' websites are at <siteUrl>/s/<web-address>.
+  siteUrl: 'https://erp.davetech.co.ke',
 };
 
 // For tests and local development the settings can come from the environment.

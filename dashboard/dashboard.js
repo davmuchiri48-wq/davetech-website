@@ -7,6 +7,7 @@
   const ACTS = {
     sign_in: ['🔓', 'Signed in'], sign_out: ['🔒', 'Signed out'], pin_failed: ['⚠️', 'Wrong PIN'], pin_locked: ['⛔', 'PIN locked'],
     sale: ['🧾', 'Sale'], discount: ['🏷️', 'Discount'], price_override: ['✏️', 'Price changed at till'], void: ['❌', 'Void'],
+    bill: ['🧾', 'Bill printed'], bill_reduced: ['⚠️', 'Paid less than the bill'],
     order_deleted: ['🗑️', 'Held order deleted'], product_added: ['📦', 'Product added'], price_changed: ['💲', 'Price changed'],
     product_edited: ['📦', 'Product edited'], product_disabled: ['📦', 'Product stopped'], stock_received: ['📥', 'Stock received'],
     stock_adjusted: ['📉', 'Stock adjusted'], stock_take: ['📋', 'Stock take'], account_payment: ['💵', 'Account payment'],

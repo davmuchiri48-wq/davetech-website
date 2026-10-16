@@ -3,7 +3,7 @@
    Runs inside the POS app (sign-in screen → "Owner dashboard") and as a standalone web page.
    Talks only to Supabase: Auth for sign-in, and the dash_* functions from supabase/schema.sql. */
 (function () {
-  const TYPES = { retail: 'Retail shop', restaurant: 'Restaurant / café', pharmacy: 'Pharmacy', canteen: 'School canteen / shop', salon: 'Salon / barber / spa', school: 'School' };
+  const TYPES = { retail: 'Retail shop', restaurant: 'Bar / Hotel', pharmacy: 'Pharmacy', canteen: 'School canteen / shop', salon: 'Salon / barber / spa', school: 'School' };
   const ACTS = {
     sign_in: ['🔓', 'Signed in'], sign_out: ['🔒', 'Signed out'], pin_failed: ['⚠️', 'Wrong PIN'], pin_locked: ['⛔', 'PIN locked'],
     sale: ['🧾', 'Sale'], discount: ['🏷️', 'Discount'], price_override: ['✏️', 'Price changed at till'], void: ['❌', 'Void'],

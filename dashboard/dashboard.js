@@ -3,7 +3,8 @@
    Runs inside the POS app (sign-in screen → "Owner dashboard") and as a standalone web page.
    Talks only to Supabase: Auth for sign-in, and the dash_* functions from supabase/schema.sql. */
 (function () {
-  const TYPES = { retail: 'Retail shop', restaurant: 'Bar / Hotel', pharmacy: 'Pharmacy', canteen: 'School canteen / shop', salon: 'Salon / barber / spa', school: 'School' };
+  const TYPES = { retail: 'Retail shop', restaurant: 'Bar / Hotel', pharmacy: 'Pharmacy', canteen: 'School canteen / shop', salon: 'Salon / barber / spa', school: 'School', college: 'College' };
+  const isEdu = (s) => s && (s.business_type === 'school' || s.business_type === 'college');
   const ACTS = {
     sign_in: ['🔓', 'Signed in'], sign_out: ['🔒', 'Signed out'], pin_failed: ['⚠️', 'Wrong PIN'], pin_locked: ['⛔', 'PIN locked'],
     sale: ['🧾', 'Sale'], discount: ['🏷️', 'Discount'], price_override: ['✏️', 'Price changed at till'], void: ['❌', 'Void'],
@@ -66,7 +67,7 @@
     let auth = store.get('auth');
     const S = { me: null, shop: null, range: store.get('range') || 'today', tab: 'summary', from: today(), to: today(), actWatch: false, actUser: '' };
     // same access levels, named for schools or shops
-    const roleName = (r) => (S.shop && S.shop.business_type === 'school' ? { cashier: 'teacher / staff', manager: 'deputy / manager', admin: 'head teacher / admin', owner: 'owner' } : { cashier: 'cashier', manager: 'manager', admin: 'admin', owner: 'owner' })[r] || r;
+    const roleName = (r) => (S.shop && S.shop.business_type === 'college' ? { cashier: 'trainer / staff', manager: 'deputy / manager', admin: 'principal / admin', owner: 'owner' } : S.shop && S.shop.business_type === 'school' ? { cashier: 'teacher / staff', manager: 'deputy / manager', admin: 'head teacher / admin', owner: 'owner' } : { cashier: 'cashier', manager: 'manager', admin: 'admin', owner: 'owner' })[r] || r;
 
     const shell = h('div', { class: 'dash' });
     put(root, shell);
@@ -293,7 +294,7 @@
 
     function openShop(s) {
       S.shop = s;
-      S.tab = s.business_type === 'school' ? 'school' : 'summary';
+      S.tab = isEdu(s) ? 'school' : 'summary';
       setRange(S.range === 'custom' ? 'today' : S.range);
       drawShop();
     }
@@ -301,7 +302,7 @@
     function drawShop() {
       const s = S.shop;
       const content = h('div', { class: 'dash-body' }, h('div', { class: 'empty' }, 'Loading…'));
-      const tabs = [s.business_type === 'school' ? ['school', 'School'] : null, ['summary', s.business_type === 'school' ? 'Shop sales' : 'Summary'], ['sales', 'Sales'], ['activity', 'Activity'], ['stock', 'Stock'], ['manage', 'Shop']].filter(Boolean);
+      const tabs = [isEdu(s) ? ['school', s.business_type === 'college' ? 'College' : 'School'] : null, ['summary', isEdu(s) ? 'Shop sales' : 'Summary'], ['sales', 'Sales'], ['activity', 'Activity'], ['stock', 'Stock'], ['manage', 'Shop']].filter(Boolean);
       const ranges = [['today', 'Today'], ['yesterday', 'Yesterday'], ['week', '7 days'], ['month', '30 days']];
       put(shell,
         topbar(s.name, `Till last seen ${ago(s.last_seen)}`, h('button', { class: 'btn sm ghost-light', onclick: renderHome }, '←'), h('button', { class: 'btn sm', onclick: drawShop }, '↻')),
@@ -354,13 +355,13 @@
       const f = d.fees;
       const pct = f.term_billed ? Math.round((f.term_collected / f.term_billed) * 100) : 0;
       put(el,
-        h('div', { class: 'muted small' }, `Updated ${ago(r.updated_at)} from ${r.device || 'the till'} · ${d.term} · ${d.pupils} pupils in ${d.classes} classes`),
+        h('div', { class: 'muted small' }, `Updated ${ago(r.updated_at)} from ${r.device || 'the till'} · ${d.term} · ${d.pupils} ${S.shop && S.shop.business_type === 'college' ? 'students' : 'pupils'} in ${d.classes} classes`),
         h('div', { class: 'stats' },
           tile('Present today', String(a.present), `${a.absent} absent${a.late ? ` · ${a.late} late` : ''}`),
           tile('Registers marked', `${a.marked}/${d.classes}`, a.not_marked.length ? 'not yet: ' + a.not_marked.slice(0, 4).join(', ') + (a.not_marked.length > 4 ? '…' : '') : 'all classes', a.not_marked.length ? 'warn' : ''),
           tile('Fees today', money(f.today, cur), `${f.today_count} payment(s)`),
           tile('Fees this term', money(f.term_collected, cur), f.term_billed ? `${pct}% of ${money(f.term_billed, cur)}` : ''),
-          tile('Owed', money(f.owed, cur), `${f.owing} pupil(s)`, f.owed > 0 ? 'warn' : '')),
+          tile('Owed', money(f.owed, cur), `${f.owing} ${S.shop && S.shop.business_type === 'college' ? 'student' : 'pupil'}(s)`, f.owed > 0 ? 'warn' : '')),
         section('Fees collected, last 7 days', bars(d.days, (x) => x.date.slice(5), 'fees', (x) => `${money(x.fees)} · ${x.payments}`)),
         section('Attendance, last 7 days', bars(d.days, (x) => x.date.slice(5), 'present', (x) => (x.present || x.absent ? `${x.present} present · ${x.absent} absent` : '—'))),
         d.exams.filter((e) => e.classes.length).map((e) => section(`${e.name} — class averages${e.locked ? ' (final)' : ''}`, bars(e.classes, (x) => x.class, 'mean', (x) => `${x.mean}% · ${x.with_marks}/${x.pupils}`))),

@@ -27,34 +27,7 @@
     return d;
   };
 
-  function renderSchoolSite(d) {
-    d = d || {};
-    const [main, soft, dark] = THEMES[d.color] || THEMES.green;
-    const c = d.contacts || {};
-    const head = d.head || {};
-    const adm = d.admissions || {};
-    const news = (d.news || []).filter((n) => n && (n.title || n.text));
-    const gallery = (d.gallery || []).map(img).filter(Boolean);
-    const fees = d.show_fees && d.fees && d.fees.grades && d.fees.grades.length ? d.fees : null;
-    const terms = (d.terms || []).filter((t) => t.starts_on || t.ends_on);
-    const sections = [
-      ['about', 'About', d.about || head.message],
-      ['admissions', 'Admissions', adm.text || adm.open],
-      ['fees', 'Fees', fees],
-      ['calendar', 'Term dates', terms.length],
-      ['news', 'News', news.length],
-      ['gallery', 'Gallery', gallery.length],
-      ['contact', 'Contact', true],
-    ].filter((x) => x[2]);
-    const logo = img(d.logo);
-    const hero = img(d.hero);
-    const stats = d.stats && d.show_stats ? d.stats : null;
-
-    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(d.name || 'School')}</title><meta name="description" content="${esc((d.motto ? d.motto + ' — ' : '') + String(d.welcome || '').slice(0, 140))}">
-<meta property="og:title" content="${esc(d.name || 'School')}"><meta name="theme-color" content="${main}">
-<style>
-  :root { --m: ${main}; --s: ${soft}; --d: ${dark}; --ink: #1b1f1d; --mut: #5d6560; --bg: #fbfaf7; --line: #e4e1d8; }
+  const css = (main, soft, dark) => `  :root { --m: ${main}; --s: ${soft}; --d: ${dark}; --ink: #1b1f1d; --mut: #5d6560; --bg: #fbfaf7; --line: #e4e1d8; }
   * { box-sizing: border-box } html { scroll-behavior: smooth } body { margin: 0; font: 16px/1.6 'Segoe UI', Roboto, system-ui, sans-serif; color: var(--ink); background: var(--bg) }
   a { color: var(--m) } img { max-width: 100% }
   .wrap { max-width: 1040px; margin: 0 auto; padding: 0 18px }
@@ -82,22 +55,67 @@
   .contact { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px } .contact .card { padding: 16px } .contact .k { color: var(--mut); font-size: 13px; text-transform: uppercase; letter-spacing: .05em }
   footer { background: var(--d); color: #fff; padding: 28px 0; font-size: 14px } footer a { color: #fff } footer .wrap { display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; opacity: .9 }
   @media (max-width: 760px) { .grid2 { grid-template-columns: 1fr } nav.links { display: none } .hero .wrap { padding: 52px 18px 44px } section { padding: 40px 0 } }
-</style></head><body>
+
+  .form { display: grid; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 22px; max-width: 760px }
+  .form .two { display: grid; grid-template-columns: 1fr 1fr; gap: 14px } .form label { display: flex; flex-direction: column; gap: 6px; font-weight: 600; font-size: 15px }
+  .form input, .form select, .form textarea { font: 16px inherit; padding: 11px 12px; border: 1px solid #cfccc2; border-radius: 10px; background: #fff; color: var(--ink); font-family: inherit }
+  .form input:focus, .form select:focus, .form textarea:focus { outline: 3px solid var(--s); border-color: var(--m) }
+  .form .req::after { content: ' *'; color: #b3261e } .form .check { flex-direction: row; align-items: flex-start; font-weight: 400; gap: 10px } .form .check input { margin-top: 4px }
+  .form button { font: 700 17px inherit; font-family: inherit; padding: 13px 20px; border: 0; border-radius: 10px; background: var(--m); color: #fff; cursor: pointer } .form button:disabled { opacity: .6 }
+  .msg { padding: 12px 14px; border-radius: 10px; font-weight: 600 } .msg.err { background: #fbe6e3; color: #8b2c1f } .msg.ok { background: #dff3e6; color: #17603b }
+  .courses { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px } .course { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px } .course .fee { font-size: 22px; font-weight: 800; color: var(--d); margin-top: 6px } .course .per { color: var(--mut); font-size: 13px }
+  @media (max-width: 760px) { .form .two { grid-template-columns: 1fr } }`;
+  const words = (d) => (d && d.kind === 'college'
+    ? { pupils: 'students', pupil: 'student', staff: 'trainers & staff', head: 'Principal', from: 'From the principal', place: 'the college', cls: 'Course', by: 'College system by Davetech', apply: 'Apply for a course' }
+    : { pupils: 'pupils', pupil: 'pupil', staff: 'teachers & staff', head: 'Head teacher', from: 'From the head teacher', place: 'the school', cls: 'Class', by: 'School system by Davetech', apply: 'Apply for admission' });
+  const base = (d) => (d && d.slug ? '/s/' + encodeURIComponent(d.slug) : '');
+  const applyOn = (d) => !!(d && d.apply && d.apply.online && d.admissions && d.admissions.open);
+
+  function renderSchoolSite(d) {
+    d = d || {};
+    const [main, soft, dark] = THEMES[d.color] || THEMES.green;
+    const c = d.contacts || {};
+    const head = d.head || {};
+    const adm = d.admissions || {};
+    const news = (d.news || []).filter((n) => n && (n.title || n.text));
+    const gallery = (d.gallery || []).map(img).filter(Boolean);
+    const fees = d.show_fees && d.fees && d.fees.grades && d.fees.grades.length ? d.fees : null;
+    const terms = (d.terms || []).filter((t) => t.starts_on || t.ends_on);
+    const sections = [
+      ['about', 'About', d.about || head.message],
+      ['admissions', 'Admissions', adm.text || adm.open],
+      ['fees', 'Fees', fees],
+      ['calendar', 'Term dates', terms.length],
+      ['news', 'News', news.length],
+      ['gallery', 'Gallery', gallery.length],
+      ['contact', 'Contact', true],
+    ].filter((x) => x[2]);
+    const logo = img(d.logo);
+    const hero = img(d.hero);
+    const stats = d.stats && d.show_stats ? d.stats : null;
+    const w = words(d);
+    const applyLink = applyOn(d) ? base(d) + '/apply' : '';
+
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(d.name || 'School')}</title><meta name="description" content="${esc((d.motto ? d.motto + ' — ' : '') + String(d.welcome || '').slice(0, 140))}">
+<meta property="og:title" content="${esc(d.name || 'School')}"><meta name="theme-color" content="${main}">
+<style>
+${css(main, soft, dark)}</style></head><body>
 <header class="top"><div class="wrap"><a class="brand" href="#top">${logo ? `<img src="${logo}" alt="">` : `<span class="mono">${esc(String(d.name || 'S').slice(0, 1))}</span>`}<span>${esc(d.name || '')}</span></a>
 <nav class="links">${sections.map(([id, label]) => `<a href="#${id}">${label}</a>`).join('')}</nav></div></header>
 <div class="hero${hero ? ' photo' : ''}" id="top">${hero ? `<img class="bg" src="${hero}" alt="">` : ''}<div class="wrap">
   <h1>${esc(d.name || '')}</h1>${d.motto ? `<div class="motto">“${esc(d.motto)}”</div>` : ''}
   ${d.welcome ? `<div class="welcome">${paras(d.welcome)}</div>` : ''}
-  <div class="cta">${adm.open ? `<a class="btn w" href="#admissions">Admissions open</a>` : ''}${c.phone ? `<a class="btn o" href="tel:${esc(phoneLink(c.phone))}">Call ${esc(c.phone)}</a>` : ''}${c.whatsapp ? `<a class="btn o" href="https://wa.me/${esc(waLink(c.whatsapp))}">WhatsApp</a>` : ''}</div>
-  ${stats ? `<div class="stats">${stats.pupils ? `<div><b>${esc(stats.pupils)}</b><span>pupils</span></div>` : ''}${stats.classes ? `<div><b>${esc(stats.classes)}</b><span>classes</span></div>` : ''}${stats.staff ? `<div><b>${esc(stats.staff)}</b><span>teachers & staff</span></div>` : ''}</div>` : ''}
+  <div class="cta">${applyLink ? `<a class="btn w" href="${applyLink}">Apply online</a>` : adm.open ? `<a class="btn w" href="#admissions">Admissions open</a>` : ''}${c.phone ? `<a class="btn o" href="tel:${esc(phoneLink(c.phone))}">Call ${esc(c.phone)}</a>` : ''}${c.whatsapp ? `<a class="btn o" href="https://wa.me/${esc(waLink(c.whatsapp))}">WhatsApp</a>` : ''}</div>
+  ${stats ? `<div class="stats">${stats.pupils ? `<div><b>${esc(stats.pupils)}</b><span>${w.pupils}</span></div>` : ''}${stats.classes ? `<div><b>${esc(stats.classes)}</b><span>classes</span></div>` : ''}${stats.staff ? `<div><b>${esc(stats.staff)}</b><span>${w.staff}</span></div>` : ''}</div>` : ''}
 </div></div>
 ${d.about || head.message ? `<section id="about"><div class="wrap grid2"><div><h2>About us</h2>${paras(d.about)}</div>
-  ${head.message ? `<div class="head">${img(head.photo) ? `<img src="${img(head.photo)}" alt="">` : ''}<div><h3>From the head teacher</h3>${paras(head.message)}<div class="who">${esc(head.name || '')}</div><div class="role">${esc(head.title || 'Head teacher')}</div></div></div>` : ''}</div></section>` : ''}
+  ${head.message ? `<div class="head">${img(head.photo) ? `<img src="${img(head.photo)}" alt="">` : ''}<div><h3>${w.from}</h3>${paras(head.message)}<div class="who">${esc(head.name || '')}</div><div class="role">${esc(head.title || w.head)}</div></div></div>` : ''}</div></section>` : ''}
 ${adm.text || adm.open ? `<section id="admissions"><div class="wrap"><h2>Admissions</h2><p><span class="pill ${adm.open ? 'open' : 'closed'}">${adm.open ? 'Admissions are open' : 'Admissions are closed for now'}</span></p>${paras(adm.text)}
-  ${c.phone || c.whatsapp ? `<div class="cta">${c.phone ? `<a class="btn m" href="tel:${esc(phoneLink(c.phone))}">Call the school</a>` : ''}${c.whatsapp ? `<a class="btn m" href="https://wa.me/${esc(waLink(c.whatsapp))}?text=${encodeURIComponent('Hello, I would like to ask about admission at ' + (d.name || 'the school') + '.')}">Ask on WhatsApp</a>` : ''}</div>` : ''}</div></section>` : ''}
-${fees ? `<section id="fees"><div class="wrap"><h2>Fees — ${esc(fees.term || '')}</h2><div class="tbl"><table><tr><th>Class</th>${fees.items.map((it) => `<th class="r">${esc(it.name)}${it.optional ? ' *' : ''}</th>`).join('')}<th class="r">Total</th></tr>
+  ${applyLink || c.phone || c.whatsapp ? `<div class="cta">${applyLink ? `<a class="btn m" href="${applyLink}">${w.apply} online</a>` : ''}${c.phone ? `<a class="btn m" href="tel:${esc(phoneLink(c.phone))}">Call ${w.place}</a>` : ''}${c.whatsapp ? `<a class="btn m" href="https://wa.me/${esc(waLink(c.whatsapp))}?text=${encodeURIComponent('Hello, I would like to ask about admission at ' + (d.name || w.place) + '.')}">Ask on WhatsApp</a>` : ''}</div>` : ''}</div></section>` : ''}
+${fees ? `<section id="fees"><div class="wrap"><h2>Fees — ${esc(fees.term || '')}</h2><div class="tbl"><table><tr><th>${w.cls}</th>${fees.items.map((it) => `<th class="r">${esc(it.name)}${it.optional ? ' *' : ''}</th>`).join('')}<th class="r">Total</th></tr>
   ${fees.grades.map((g) => `<tr><td><b>${esc(g.grade)}</b></td>${fees.items.map((it) => `<td class="r">${g.amounts[it.id] ? money(g.amounts[it.id]) : '—'}</td>`).join('')}<td class="r"><b>${money(g.total)}</b></td></tr>`).join('')}</table></div>
-  <div class="note">Amounts in ${esc(fees.currency || 'KES')} per term.${fees.items.some((i) => i.optional) ? ' * Optional, only for pupils who take it; not in the total.' : ''}</div></div></section>` : ''}
+  <div class="note">Amounts in ${esc(fees.currency || 'KES')} per term.${fees.items.some((i) => i.optional) ? ` * Optional, only for ${w.pupils} who take it; not in the total.` : ''}</div></div></section>` : ''}
 ${terms.length ? `<section id="calendar"><div class="wrap"><h2>Term dates</h2><div class="tbl"><table><tr><th>Term</th><th>Opens</th><th>Closes</th></tr>${terms.map((t) => `<tr><td><b>${esc(t.name)}</b></td><td>${date(t.starts_on)}</td><td>${date(t.ends_on)}</td></tr>`).join('')}</table></div></div></section>` : ''}
 ${news.length ? `<section id="news"><div class="wrap"><h2>News & events</h2><div class="news">${news.map((n) => `<article class="card">${img(n.photo) ? `<img src="${img(n.photo)}" alt="">` : ''}<div class="in">${n.date ? `<time>${date(n.date)}</time>` : ''}<h3>${esc(n.title || '')}</h3>${paras(n.text)}</div></article>`).join('')}</div></div></section>` : ''}
 ${gallery.length ? `<section id="gallery"><div class="wrap"><h2>Gallery</h2><div class="gal">${gallery.map((g) => `<img src="${g}" alt="" loading="lazy">`).join('')}</div></div></section>` : ''}
@@ -108,11 +126,95 @@ ${gallery.length ? `<section id="gallery"><div class="wrap"><h2>Gallery</h2><div
   ${c.address ? `<div class="card"><div class="k">Location</div>${esc(c.address)}${c.map ? `<br><a href="${esc(/^https?:\/\//.test(c.map) ? c.map : 'https://maps.google.com/?q=' + encodeURIComponent(c.map))}">Open in Google Maps</a>` : ''}</div>` : ''}
   ${c.facebook ? `<div class="card"><div class="k">Facebook</div><a href="${esc(/^https?:\/\//.test(c.facebook) ? c.facebook : 'https://facebook.com/' + c.facebook)}">${esc(c.facebook.replace(/^https?:\/\/(www\.)?/, ''))}</a></div>` : ''}
 </div></div></section>
-<footer><div class="wrap"><span>© ${new Date().getFullYear()} ${esc(d.name || '')}</span><span>School system by Davetech</span></div></footer>
+<footer><div class="wrap"><span>© ${new Date().getFullYear()} ${esc(d.name || '')}</span><span>${w.by}</span></div></footer>
 </body></html>`;
   }
 
+  // Page head + header bar shared by the form and the courses block.
+  const shell = (d, title, body, { bare = false } = {}) => {
+    const [main, soft, dark] = THEMES[d.color] || THEMES.green;
+    const logo = img(d.logo);
+    return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(title)}</title><meta name="theme-color" content="${main}"><style>
+${css(main, soft, dark)}
+  body.bare { background: transparent } body.bare section { padding: 8px 0; border: 0 } body.bare section:nth-of-type(even) { background: transparent }
+</style></head><body${bare ? ' class="bare"' : ''}>
+${bare ? '' : `<header class="top"><div class="wrap"><a class="brand" href="${base(d) || '#'}">${logo ? `<img src="${logo}" alt="">` : `<span class="mono">${esc(String(d.name || 'S').slice(0, 1))}</span>`}<span>${esc(d.name || '')}</span></a></div></header>`}
+${body}
+${bare ? '' : `<footer><div class="wrap"><span>© ${new Date().getFullYear()} ${esc(d.name || '')}</span><span>${words(d).by}</span></div></footer>`}
+</body></html>`;
+  };
+
+  // The online application form (/s/<address>/apply). page.js sends it; this only draws it.
+  function renderApplyForm(d) {
+    d = d || {};
+    const w = words(d);
+    const college = d.kind === 'college';
+    const ap = d.apply || {};
+    if (!applyOn(d)) {
+      const c = d.contacts || {};
+      return shell(d, w.apply + ' — ' + (d.name || ''), `<section><div class="wrap"><h2>${w.apply}</h2><p class="msg err">${esc(d.name || 'We')} ${d.admissions && d.admissions.open ? 'is not taking applications online right now.' : 'is not taking new applications right now.'}</p>
+        ${c.phone ? `<p>Please call <a href="tel:${esc(phoneLink(c.phone))}">${esc(c.phone)}</a>.</p>` : ''}<p><a href="${base(d)}">Back to the website</a></p></div></section>`);
+    }
+    const opt = (list, ph) => `<option value="">${ph}</option>` + (list || []).map((x) => `<option>${esc(x)}</option>`).join('');
+    const intakes = (ap.intakes || []).length ? `<select name="intake">${opt(ap.intakes, '— any —')}</select>` : `<input name="intake" maxlength="60" placeholder="e.g. January 2027">`;
+    return shell(d, w.apply + ' — ' + (d.name || ''), `<section><div class="wrap">
+  <h2>${w.apply}</h2>
+  <p>Fill in this form and ${esc(d.name || w.place)} will contact you. Fields marked * are needed.</p>
+  <form class="form" id="apply-form" novalidate>
+    <label><span class="req">${college ? 'Full name' : 'Child’s full name'}</span><input name="name" required maxlength="80" autocomplete="name"></label>
+    <div class="two">
+      <label><span class="req">${college ? 'Course' : 'Class applying for'}</span><select name="course" required>${opt(ap.choices, '— choose —')}</select></label>
+      <label>${college ? 'Preferred intake' : 'When to join'}${intakes}</label>
+    </div>
+    <div class="two">
+      <label><span class="req">${college ? 'Phone number' : 'Parent’s phone number'}</span><input name="phone" type="tel" required maxlength="20" placeholder="07…" autocomplete="tel"></label>
+      <label>Email<input name="email" type="email" maxlength="100" autocomplete="email"></label>
+    </div>
+    <div class="two">
+      <label>Gender<select name="gender"><option value="">—</option><option>${college ? 'Female' : 'Girl'}</option><option>${college ? 'Male' : 'Boy'}</option></select></label>
+      <label>Date of birth<input name="dob" type="date"></label>
+    </div>
+    ${college ? `<div class="two"><label>ID / birth certificate no.<input name="id_no" maxlength="30"></label>
+      <label>Highest education<select name="education"><option value="">—</option><option>KCSE</option><option>KCPE / KPSEA</option><option>Certificate</option><option>Diploma</option><option>Degree</option><option>Other</option></select></label></div>` : ''}
+    <div class="two">
+      <label>${college ? 'Country' : 'County'}<input name="${college ? 'country' : 'region'}" maxlength="60" ${college ? 'value="Kenya"' : ''}></label>
+      <label>${college ? 'County / region' : 'Residential area'}<input name="${college ? 'region' : 'residence'}" maxlength="60"></label>
+    </div>
+    ${college ? '<label>Residential area<input name="residence" maxlength="60"></label>' : ''}
+    <div class="two">
+      <label>${college ? 'Sponsor / next of kin' : 'Parent / guardian’s name'}<input name="sponsor_name" maxlength="80"></label>
+      <label>${college ? 'Sponsor’s phone' : 'Second phone'}<input name="sponsor_phone" type="tel" maxlength="20"></label>
+    </div>
+    <label>Message (optional)<textarea name="message" rows="3" maxlength="1000" placeholder="${college ? 'e.g. I prefer evening classes' : 'e.g. moving from another school'}"></textarea></label>
+    <label class="check"><input type="checkbox" name="consent" required><span>I agree that ${esc(d.name || w.place)} may keep these details and contact me about this application.</span></label>
+    <div id="apply-msg" role="status"></div>
+    <button type="submit">Send application</button>
+  </form></div></section>`);
+  }
+
+  // Courses / classes with fees and intakes, made to sit inside another website (/s/<address>/courses).
+  function renderCourses(d) {
+    d = d || {};
+    const w = words(d);
+    const fees = d.show_fees && d.fees && d.fees.grades ? d.fees : null;
+    const choices = (d.apply && d.apply.choices) || (fees ? fees.grades.map((g) => g.grade) : []);
+    const feeOf = (name) => (fees ? fees.grades.find((g) => g.grade === name) : null);
+    const intakes = (d.apply && d.apply.intakes) || [];
+    const terms = (d.terms || []).filter((t) => t.starts_on);
+    const applyLink = applyOn(d) ? base(d) + '/apply' : '';
+    return shell(d, (d.kind === 'college' ? 'Courses' : 'Classes') + ' — ' + (d.name || ''), `<section><div class="wrap">
+  <div class="courses">${choices.map((name) => { const f = feeOf(name); return `<div class="course"><h3>${esc(name)}</h3>${f ? `<div class="fee">${esc(fees.currency || 'KES')} ${money(f.total)}</div><div class="per">per term${fees.term ? ' (' + esc(fees.term) + ')' : ''}</div>` : ''}</div>`; }).join('')}</div>
+  ${intakes.length ? `<p><b>Intakes:</b> ${intakes.map(esc).join(' · ')}</p>` : ''}
+  ${terms.length ? `<p><b>Next term opens:</b> ${terms.map((t) => `${esc(t.name)} — ${date(t.starts_on)}`).join(' · ')}</p>` : ''}
+  ${fees && fees.items.some((i) => i.optional) ? `<p class="note">Fees shown are tuition and other required fees per term. ${fees.items.filter((i) => i.optional).map((i) => esc(i.name)).join(', ')} are extra, only for ${w.pupils} who take them.</p>` : ''}
+  <div class="cta">${applyLink ? `<a class="btn m" href="${applyLink}" target="_top">${w.apply} online</a>` : ''}<a class="btn m" style="background:var(--d)" href="${base(d) || '#'}" target="_top">More about ${esc(d.name || w.place)}</a></div>
+</div></section>`, { bare: true });
+  }
+
   root.renderSchoolSite = renderSchoolSite;
+  root.renderApplyForm = renderApplyForm;
+  root.renderCourses = renderCourses;
   root.SITE_THEMES = THEMES;
-  if (typeof module !== 'undefined') module.exports = { renderSchoolSite, THEMES };
+  if (typeof module !== 'undefined') module.exports = { renderSchoolSite, renderApplyForm, renderCourses, THEMES };
 })(typeof window !== 'undefined' ? window : globalThis);

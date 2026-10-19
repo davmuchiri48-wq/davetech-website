@@ -435,3 +435,4 @@ table.tt tr.tt-break td, table.tt tr.tt-break th { background: var(--bg); }
 .site-swatch { width: 38px; height: 38px; border-radius: 50%; border: 3px solid #fff; box-shadow: 0 0 0 1px var(--line); cursor: pointer; }
 .site-swatch.on { box-shadow: 0 0 0 3px var(--ink); }
 .site-preview { width: 100%; height: 70vh; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+.input.saved { border-color: var(--ok); background: #f1faf4; }

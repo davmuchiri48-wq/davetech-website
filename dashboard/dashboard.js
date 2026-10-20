@@ -1,5 +1,5 @@
 'use strict';
-/* Davetech POS — online owner dashboard.
+/* Davetech System — online owner dashboard.
    Runs inside the POS app (sign-in screen → "Owner dashboard") and as a standalone web page.
    Talks only to Supabase: Auth for sign-in, and the dash_* functions from supabase/schema.sql. */
 (function () {
@@ -194,7 +194,7 @@
       pw.addEventListener('keydown', (e) => e.key === 'Enter' && go());
       draw();
       put(shell, h('div', { class: 'dash-center' }, h('div', { class: 'card dash-auth' },
-        h('div', { class: 'row' }, h('div', { class: 'logo' }, 'D'), h('div', {}, h('h1', {}, 'Owner dashboard'), h('div', { class: 'muted small' }, 'Davetech POS — your shops, live'))),
+        h('div', { class: 'row' }, h('div', { class: 'logo' }, 'D'), h('div', {}, h('h1', {}, 'Owner dashboard'), h('div', { class: 'muted small' }, 'Davetech System — your shops, live'))),
         h('div', { class: 'field' }, 'Email', email), h('div', { class: 'field' }, 'Password', h('div', { class: 'dash-pw' }, pw, eye)), msg, btn, switcher,
         onExit ? h('button', { class: 'btn ghost', onclick: onExit }, '← Back to the till') : null)));
     }

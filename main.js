@@ -32,7 +32,7 @@
   const list = $('#contact-list');
   const items = [
     C.phone && `<li><span>Phone</span><a href="tel:${esc(tel(C.phone))}">${esc(C.phone)}</a></li>`,
-    C.whatsapp && `<li><span>WhatsApp</span><a href="${esc(waUrl('Hello Davetech'))}" target="_blank" rel="noopener">${esc(C.whatsapp)}</a></li>`,
+    C.whatsapp && `<li><span>WhatsApp</span><a href="${esc(waUrl('Hello Daalpha Systems'))}" target="_blank" rel="noopener">${esc(C.whatsapp)}</a></li>`,
     C.email && `<li><span>Email</span><a href="mailto:${esc(C.email)}">${esc(C.email)}</a></li>`,
     C.location && `<li><span>Location</span>${esc(C.location)}</li>`,
     C.hours && `<li><span>Open</span>${esc(C.hours)}</li>`,
@@ -44,8 +44,8 @@
     wa: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm0 18.2c-1.5 0-3-.4-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1l-.8 1c-.1.2-.3.2-.5.1a6.7 6.7 0 0 1-3.3-2.9c-.3-.4.2-.4.7-1.4.1-.2 0-.3 0-.4l-.8-1.8c-.2-.5-.4-.4-.6-.4h-.5a1 1 0 0 0-.7.3 3 3 0 0 0-.9 2.2c0 1.3.9 2.5 1 2.7.1.2 1.8 2.8 4.4 3.9 1.6.7 2.3.8 3.1.7.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.2-.2-.5-.3Z"/></svg>',
     call: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1A17 17 0 0 1 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1l-2.3 2.2Z"/></svg>',
   };
-  if (C.whatsapp) fl.insertAdjacentHTML('beforeend', `<a class="wa" href="${esc(waUrl('Hello Davetech'))}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">${icon.wa}</a>`);
-  if (C.phone) fl.insertAdjacentHTML('beforeend', `<a class="call" href="tel:${esc(tel(C.phone))}" aria-label="Call Davetech">${icon.call}</a>`);
+  if (C.whatsapp) fl.insertAdjacentHTML('beforeend', `<a class="wa" href="${esc(waUrl('Hello Daalpha Systems'))}" target="_blank" rel="noopener" aria-label="Chat on WhatsApp">${icon.wa}</a>`);
+  if (C.phone) fl.insertAdjacentHTML('beforeend', `<a class="call" href="tel:${esc(tel(C.phone))}" aria-label="Call Daalpha Systems">${icon.call}</a>`);
 
   // packages from config, with All / One-time / Pay as you go tabs
   const plans = $('#plans');
@@ -54,7 +54,7 @@
   const P = Array.isArray(C.pricing) ? C.pricing : [];
   if (P.length) {
     plans.innerHTML = P.map((p, i) => {
-      const msg = `Hello Davetech, I'm interested in the ${p.name} package (${p.price}${p.per ? ' ' + p.per : ''}).`;
+      const msg = `Hello Daalpha Systems, I'm interested in the ${p.name} package (${p.price}${p.per ? ' ' + p.per : ''}).`;
       const notes = (p.notes || []).map((n) => `<span>${esc(n)}</span>`).join('<br>');
       return `<article class="plan${i % 2 ? ' alt' : ''}" data-group="${esc(p.group || 'once')}">
         <div class="plan-top">${esc(p.name)}</div>
@@ -76,7 +76,7 @@
 
   // WhatsApp links (set after the package buttons exist)
   $$('.wa-link').forEach((a) => {
-    if (C.whatsapp) { a.href = waUrl(a.dataset.msg || 'Hello Davetech'); a.target = '_blank'; a.rel = 'noopener'; }
+    if (C.whatsapp) { a.href = waUrl(a.dataset.msg || 'Hello Daalpha Systems'); a.target = '_blank'; a.rel = 'noopener'; }
   });
 
   // chat bubble
@@ -110,13 +110,13 @@
     youtube: '<path d="M21.6 7.2A2.5 2.5 0 0 0 19.8 5.4C18.2 5 12 5 12 5s-6.2 0-7.8.4A2.5 2.5 0 0 0 2.4 7.2 26 26 0 0 0 2 12a26 26 0 0 0 .4 4.8 2.5 2.5 0 0 0 1.8 1.8c1.6.4 7.8.4 7.8.4s6.2 0 7.8-.4a2.5 2.5 0 0 0 1.8-1.8A26 26 0 0 0 22 12a26 26 0 0 0-.4-4.8ZM10 15V9l5.2 3L10 15Z"/>',
   };
   const S = C.social || {};
-  $('#social').innerHTML = Object.keys(soc).filter((k) => S[k]).map((k) => `<a href="${esc(S[k])}" target="_blank" rel="noopener" aria-label="Davetech on ${k}"><svg viewBox="0 0 24 24">${soc[k]}</svg></a>`).join('');
+  $('#social').innerHTML = Object.keys(soc).filter((k) => S[k]).map((k) => `<a href="${esc(S[k])}" target="_blank" rel="noopener" aria-label="Daalpha Systems on ${k}"><svg viewBox="0 0 24 24">${soc[k]}</svg></a>`).join('');
 
   // quote form → WhatsApp (or email) with the message ready
   $('#quote').addEventListener('submit', (e) => {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
-    const text = `Hello Davetech, I'm ${f.name} from ${f.business} (${f.type}${f.town ? ', ' + f.town : ''}).\n${f.msg || 'I would like a quote for the POS.'}`;
+    const text = `Hello Daalpha Systems, I'm ${f.name} from ${f.business} (${f.type}${f.town ? ', ' + f.town : ''}).\n${f.msg || 'I would like a quote for the POS.'}`;
     const note = $('#form-note');
     if (C.whatsapp) {
       window.open(waUrl(text), '_blank', 'noopener');

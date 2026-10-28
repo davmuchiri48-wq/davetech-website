@@ -1,5 +1,5 @@
 'use strict';
-/* Davetech System — online owner dashboard.
+/* Daalpha Systems — online owner dashboard.
    Runs inside the POS app (sign-in screen → "Owner dashboard") and as a standalone web page.
    Talks only to Supabase: Auth for sign-in, and the dash_* functions from supabase/schema.sql. */
 (function () {
@@ -194,7 +194,7 @@
       pw.addEventListener('keydown', (e) => e.key === 'Enter' && go());
       draw();
       put(shell, h('div', { class: 'dash-center' }, h('div', { class: 'card dash-auth' },
-        h('div', { class: 'row' }, h('div', { class: 'logo' }, 'D'), h('div', {}, h('h1', {}, 'Owner dashboard'), h('div', { class: 'muted small' }, 'Davetech System — your shops, live'))),
+        h('div', { class: 'row' }, h('div', { class: 'logo' }, 'D'), h('div', {}, h('h1', {}, 'Owner dashboard'), h('div', { class: 'muted small' }, 'Daalpha Systems — your shops, live'))),
         h('div', { class: 'field' }, 'Email', email), h('div', { class: 'field' }, 'Password', h('div', { class: 'dash-pw' }, pw, eye)), msg, btn, switcher,
         onExit ? h('button', { class: 'btn ghost', onclick: onExit }, '← Back to the till') : null)));
     }
@@ -211,11 +211,11 @@
         return;
       }
       const body = h('div', { class: 'dash-body' });
-      const bar = topbar(me.is_admin ? 'All shops' : 'My shops', (me.email || '') + (me.is_admin ? ' · Davetech admin' : ''), onExit ? h('button', { class: 'btn sm ghost-light', onclick: onExit }, '←') : null,
+      const bar = topbar(me.is_admin ? 'All shops' : 'My shops', (me.email || '') + (me.is_admin ? ' · Daalpha Systems admin' : ''), onExit ? h('button', { class: 'btn sm ghost-light', onclick: onExit }, '←') : null,
         h('div', { class: 'row', style: 'gap:6px;flex-wrap:nowrap' }, h('button', { class: 'btn sm', onclick: renderHome }, '↻'), h('button', { class: 'btn sm', onclick: signOut }, 'Sign out')));
       put(shell, bar, body);
       put(body,
-        !me.admin_exists ? h('div', { class: 'card pad', style: 'display:flex;flex-direction:column;gap:8px' }, h('b', {}, 'First-time setup'), h('div', { class: 'muted small' }, 'If you are Davetech, make this account the admin. The admin can see every customer’s shop for support. Only the first account can do this.'), h('div', {}, h('button', { class: 'btn primary', onclick: async () => { if (await tryRpc('claim_admin')) { toast('You are now the Davetech admin.'); renderHome(); } } }, 'Make me the Davetech admin'))) : null,
+        !me.admin_exists ? h('div', { class: 'card pad', style: 'display:flex;flex-direction:column;gap:8px' }, h('b', {}, 'First-time setup'), h('div', { class: 'muted small' }, 'If you are Daalpha Systems, make this account the admin. The admin can see every customer’s shop for support. Only the first account can do this.'), h('div', {}, h('button', { class: 'btn primary', onclick: async () => { if (await tryRpc('claim_admin')) { toast('You are now the Daalpha Systems admin.'); renderHome(); } } }, 'Make me the Daalpha Systems admin'))) : null,
         h('div', { class: 'row', style: 'gap:8px' }, me.is_admin ? h('button', { class: 'btn primary', onclick: addShop }, '+ Add a shop') : null, h('button', { class: me.is_admin ? 'btn' : 'btn primary', onclick: joinShop }, 'I have an owner code'), me.is_admin ? h('button', { class: 'btn', onclick: recoveryAnswer }, '🔑 Unlock codes') : null),
         me.shops.length
           ? me.shops.map((s) => {
@@ -227,10 +227,10 @@
                   h('div', {}, h('span', { class: 'k' }, 'Sales'), h('b', {}, s.today_count)),
                   h('div', {}, h('span', { class: 'k' }, 'Till last seen'), h('b', { class: s.tills ? (stale ? 'warn-text' : '') : 'muted' }, s.tills ? ago(s.last_seen) : 'not linked'))));
             })
-          : h('div', { class: 'empty' }, me.is_admin ? 'No shops yet. Add a shop, then type its till code into the POS (Settings → Online dashboard).' : 'No shops yet. Davetech gives you an owner code for your shop: tap “I have an owner code” and type it in.'));
+          : h('div', { class: 'empty' }, me.is_admin ? 'No shops yet. Add a shop, then type its till code into the POS (Settings → Online dashboard).' : 'No shops yet. Daalpha Systems gives you an owner code for your shop: tap “I have an owner code” and type it in.'));
     }
 
-    // Davetech admin: answer codes for a customer's POS ("Forgot the owner password?" or "+ Add business").
+    // Daalpha Systems admin: answer codes for a customer's POS ("Forgot the owner password?" or "+ Add business").
     function recoveryAnswer() {
       const code = h('input', { class: 'input recovery-answer', placeholder: 'XXXX-XXXX', autocomplete: 'off', autocapitalize: 'characters', spellcheck: false });
       const kind = h('select', { class: 'input' }, h('option', { value: 'addshop' }, 'Add a business on their POS'), h('option', { value: 'recovery' }, 'Reset their owner password'));
@@ -238,7 +238,7 @@
       const go = async () => {
         const r = await tryRpc('dash_unlock_answer', { p_code: code.value, p_kind: kind.value });
         if (!r) return;
-        const what = kind.value === 'addshop' ? 'They type it under “Answer code from Davetech” to add one business.' : 'They type it in, then choose a new owner password. It unlocks the whole POS, so check who is calling first.';
+        const what = kind.value === 'addshop' ? 'They type it under “Answer code from Daalpha Systems” to add one business.' : 'They type it in, then choose a new owner password. It unlocks the whole POS, so check who is calling first.';
         put(out, h('div', { class: 'dash-code' }, h('div', { class: 'muted small' }, `Answer for ${r.code}`), h('div', { class: 'dash-code-val' }, r.answer), h('div', { class: 'muted small' }, what)));
       };
       code.addEventListener('keydown', (e) => e.key === 'Enter' && go());

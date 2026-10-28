@@ -1,7 +1,7 @@
-// Davetech website settings. Change these and re-upload the folder; nothing else needs editing.
+// Daalpha Systems website settings. Change these and re-upload the folder; nothing else needs editing.
 // Empty values are simply hidden on the site.
 window.DAVETECH = {
-  company: 'Davetech',
+  company: 'Daalpha Systems',
   phone: '', // e.g. '0712 345 678' — shows Call buttons
   whatsapp: '', // e.g. '0712345678' — WhatsApp buttons, the Chat bubble and "Choose package" all send messages here
   email: '', // e.g. 'info@davetech.co.ke'

@@ -66,8 +66,8 @@
   .courses { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px } .course { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 16px } .course .fee { font-size: 22px; font-weight: 800; color: var(--d); margin-top: 6px } .course .per { color: var(--mut); font-size: 13px }
   @media (max-width: 760px) { .form .two { grid-template-columns: 1fr } }`;
   const words = (d) => (d && d.kind === 'college'
-    ? { pupils: 'students', pupil: 'student', staff: 'trainers & staff', head: 'Principal', from: 'From the principal', place: 'the college', cls: 'Course', by: 'College system by Davetech', apply: 'Apply for a course' }
-    : { pupils: 'pupils', pupil: 'pupil', staff: 'teachers & staff', head: 'Head teacher', from: 'From the head teacher', place: 'the school', cls: 'Class', by: 'School system by Davetech', apply: 'Apply for admission' });
+    ? { pupils: 'students', pupil: 'student', staff: 'trainers & staff', head: 'Principal', from: 'From the principal', place: 'the college', cls: 'Course', by: 'College system by Daalpha Systems', apply: 'Apply for a course' }
+    : { pupils: 'pupils', pupil: 'pupil', staff: 'teachers & staff', head: 'Head teacher', from: 'From the head teacher', place: 'the school', cls: 'Class', by: 'School system by Daalpha Systems', apply: 'Apply for admission' });
   const base = (d) => (d && d.slug ? '/s/' + encodeURIComponent(d.slug) : '');
   const applyOn = (d) => !!(d && d.apply && d.apply.online && d.admissions && d.admissions.open);
 

@@ -1,4 +1,4 @@
-/* Davetech website. One loud thing: the receipt printing in the hero. Everything else stays calm. */
+/* Daalpha Systems website. One loud thing: the receipt printing in the hero. Everything else stays calm. */
 :root {
   --paper: #ffffff;
   --white: #ffffff;
@@ -262,3 +262,12 @@ details p { padding: 0 0 18px; color: var(--mute); max-width: 68ch; }
   .fc { padding: 20px; }
   .float a { width: 54px; height: 54px; }
 }
+/* keep the header on one line with the longer company name */
+.logo, .menu a, .top .btn { white-space: nowrap; }
+@media (min-width: 761px) and (max-width: 1240px) {
+  .logo { font-size: 20px; }
+  .menu { gap: 0; }
+  .menu a { padding: 8px 8px; font-size: 14.5px; }
+  .top .btn.small { padding-left: 14px; padding-right: 14px; }
+}
+@media (min-width: 761px) and (max-width: 1060px) { .top .hide-sm { display: none; } }

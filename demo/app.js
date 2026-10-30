@@ -347,7 +347,8 @@ const DEMO_PASSWORD = 'demo1234';
 const DEMO_TYPES = [
   ['retail', '🛒', 'Shop / supermarket', 'Mama Njeri Supermarket', 'Sell with barcodes, M-Pesa, stock alerts, customers on credit.'],
   ['pharmacy', '💊', 'Pharmacy', 'Afya Bora Pharmacy', 'Batches and expiry dates, prescription items, stock take.'],
-  ['restaurant', '🍺', 'Bar / hotel', 'Savanna Bar & Grill', 'Tables, bills before payment, kitchen tickets.'],
+  ['bar', '🍺', 'Bar / pub', 'Savanna Bar & Lounge', 'Tables and open tabs, bills before payment, bottles counted.'],
+  ['restaurant', '🍽', 'Hotel / restaurant', 'Mama Oliech Hotel', 'Tables, kitchen tickets, breakfast and meals menu.'],
   ['salon', '💇', 'Salon / barber', 'Glow Beauty Salon', 'Services, stylists and their commission.'],
   ['school', '🏫', 'Primary school', 'Sunrise Academy', 'Pupils, fees, registers, CBC report cards, ID cards, website.'],
   ['college', '🎓', 'College (ICT / technical)', 'Xponent ICT & Technical College', 'Courses, students, fees, online applications, results slips.'],

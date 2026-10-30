@@ -566,3 +566,6 @@ table.tt tr.tt-break td, table.tt tr.tt-break th { background: var(--bg); }
 .danger-zone { border: 1px solid #f0c2bb; }
 .input.locked { display: flex; align-items: center; background: var(--bg); color: var(--ink); font-weight: 600; }
 .tile .pic, .tile .info { flex-shrink: 0; }
+/* cashier full screen */
+.kiosk-exit { display: block; margin-top: 6px; background: rgba(255, 255, 255, 0.1); color: #fff !important; border-color: rgba(255, 255, 255, 0.3); }
+.kiosk-corner { position: fixed; right: 14px; bottom: 14px; z-index: 30; background: rgba(255, 255, 255, 0.92); color: var(--ink) !important; }

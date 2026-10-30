@@ -428,8 +428,63 @@ window.addEventListener('demo-html', (e) => {
   modal({ title: e.detail.name.replace(/\.html?$/i, '').replace(/[-_]+/g, ' '), wide: true, body: frame, foot: (close) => [h('span', { class: 'spacer' }), h('button', { class: 'btn', onclick: close }, 'Close'), h('button', { class: 'btn primary', onclick: () => frame.contentWindow.print() }, 'Print / save as PDF')] });
 });
 
+// ================= Cashier full screen (Windows) =================
+// While a cashier is signed in the window fills the screen; a manager's PIN or password is needed to leave it.
+const hasScreenLock = () => !!(window.pos && window.pos.screenLock) && !isPhone();
+let screenLockReady = false;
+async function initScreenLock() {
+  if (!hasScreenLock() || screenLockReady) return;
+  screenLockReady = true;
+  const st = await window.pos.screenLock();
+  S.screenLocked = !!(st.ok && st.data.locked);
+  document.body.classList.toggle('kiosk', S.screenLocked);
+  window.pos.onScreenLock((d) => {
+    S.screenLocked = !!d.locked;
+    document.body.classList.toggle('kiosk', S.screenLocked);
+    if (S.user) renderShell();
+    const b = document.querySelector('.kiosk-corner');
+    if (b) b.style.display = S.screenLocked ? '' : 'none';
+  });
+  window.pos.onUnlockRequest((d) => openUnlockScreen(d || {}));
+}
+// small button for the PIN / sign-in screens while locked
+const kioskCorner = () => h('button', { class: 'btn sm kiosk-corner', style: S.screenLocked ? '' : 'display:none', onclick: () => openUnlockScreen() }, '🔒 Exit full screen');
+
+async function openUnlockScreen({ quit = false } = {}) {
+  if (document.querySelector('.unlock-modal')) return;
+  const tid = (S.tenant && S.tenant.id) || prefs.get('tillTenant', null) || Number(prefs.get('lastTenant', 0)) || null;
+  const pu = tid ? await window.pos.call('pinUsers', { tenantId: tid }) : { ok: false };
+  const managers = pu.ok ? pu.data.users.filter((u) => u.role !== 'cashier') : [];
+  let mode = managers.length ? 'pin' : 'password';
+  const body = h('div', { class: 'stack unlock-modal', style: 'gap:12px' });
+  const draw = () => put(body,
+    h('div', { class: 'muted' }, quit ? 'The till is in cashier full screen. A manager must confirm to close the app.' : 'A manager, admin or the owner must confirm to leave full screen.'),
+    mode === 'pin'
+      ? [field('Manager', sel('userId', managers.map((u) => [u.id, u.name + ' (' + roleLabel(u.role) + ')']), managers[0] && managers[0].id)), field('PIN', inp('pin', '', { type: 'password', inputmode: 'numeric', autocomplete: 'off' }))]
+      : [field('Username', inp('username', '', { autocomplete: 'off' })), field('Password', inp('password', '', { type: 'password' }))],
+    managers.length ? h('button', { class: 'btn ghost sm', onclick: () => { mode = mode === 'pin' ? 'password' : 'pin'; draw(); } }, mode === 'pin' ? 'Use username and password instead' : 'Use a PIN instead') : null);
+  draw();
+  modal({
+    title: quit ? 'Close the till' : 'Exit full screen',
+    body,
+    foot: (close) => [
+      h('span', { class: 'spacer' }),
+      h('button', { class: 'btn', onclick: close }, 'Cancel'),
+      h('button', { class: 'btn primary', onclick: async () => {
+        const d = formData(body);
+        const args = mode === 'pin' ? { tenantId: tid, userId: Number(d.userId), pin: d.pin, quit } : { tenantId: tid, username: d.username, password: d.password, quit };
+        const r = await window.pos.unlockScreen(args);
+        if (!r.ok) return toast(r.error, true);
+        close();
+        if (!quit) toast('Full screen ended by ' + r.data.name + '.');
+      } }, quit ? 'Close app' : 'Exit full screen'),
+    ],
+  });
+}
+
 async function boot() {
   if (window.pos && window.pos.demo) return demoBoot();
+  await initScreenLock();
   S.status = await api('status');
   if (!S.status.setupDone) return renderSetup();
   renderLogin();
@@ -488,7 +543,7 @@ async function renderLogin(force) {
     h('button', { class: 'btn ghost', onclick: openDashboard }, '📊 Owner dashboard (online)'),
     h('button', { class: 'btn ghost sm', onclick: () => openRecovery(card) }, 'Forgot the owner password?')
   );
-  mount(h('div', { class: 'auth' }, card));
+  mount(h('div', { class: 'auth' }, card, hasScreenLock() ? kioskCorner() : null));
 }
 
 // Forgotten system-owner password: the customer reads a code to Daalpha Systems and types in the answer code.
@@ -634,7 +689,7 @@ async function renderPinLogin(tid) {
   document.addEventListener('keydown', pinKeyHandler);
 
   draw();
-  mount(h('div', { class: 'pin-screen' }, list, h('div', { class: 'pin-centre' }, who, dots, msg, pad)));
+  mount(h('div', { class: 'pin-screen' }, list, h('div', { class: 'pin-centre' }, who, dots, msg, pad), hasScreenLock() ? kioskCorner() : null));
 }
 
 async function enter() {
@@ -813,7 +868,7 @@ function renderShell() {
     NAV.filter((n) => n[3]()).map(([id, ico, label]) =>
       h('button', { class: 'nav' + (S.page === id ? ' on' : ''), onclick: () => go(id) }, h('span', { class: 'ico' }, ico), id === 'customers' && S.tenant.business_type === 'canteen' ? 'Students' : id === 'customers' && S.tenant.business_type === 'salon' ? 'Clients' : typeof label === 'function' ? label() : label, badgeFor(id))
     ),
-    h('div', { class: 'who' }, h('b', {}, S.user.name), h('div', { class: 'muted', style: 'color:inherit;opacity:.7' }, S.user.title || roleLabel(S.user.role)), h('button', { class: 'btn sm', style: 'margin-top:8px', onclick: logout }, 'Sign out'))
+    h('div', { class: 'who' }, h('b', {}, S.user.name), h('div', { class: 'muted', style: 'color:inherit;opacity:.7' }, S.user.title || roleLabel(S.user.role)), h('button', { class: 'btn sm', style: 'margin-top:8px', onclick: logout }, 'Sign out'), S.screenLocked ? h('button', { class: 'btn sm kiosk-exit', onclick: () => openUnlockScreen() }, '🔒 Exit full screen') : null)
   );
   const main = h('main', { class: 'main', id: 'main' });
   const navLabel = (NAV.find((n) => n[0] === S.page) || [])[2] || '';
@@ -2231,6 +2286,7 @@ async function pageSettings(main) {
     add(acct, pinBox);
   }
 
+  const screenLockEnabled = hasScreenLock() ? !!((await window.pos.screenLock()).data || {}).enabled : false;
   // This computer as a till: sign-in becomes staff list + PIN pad.
   const tillOn = prefs.get('tillTenant', null) === S.tenant.id;
   const till = can('admin')
@@ -2239,6 +2295,7 @@ async function pageSettings(main) {
         h('div', { class: 'muted' }, (isPhone() ? 'When on, the sign-in screen on this phone shows only the staff of ' : 'When on, the sign-in screen on this computer shows only the staff of '), h('b', {}, S.tenant.name), ' and a PIN pad. Give each person a PIN under Users.'),
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: tillOn, onchange: (e) => { prefs.set('tillTenant', e.target.checked ? S.tenant.id : null); toast(e.target.checked ? 'Till mode on. Sign out to see the PIN screen.' : 'Till mode off.'); } }), isPhone() ? 'Use this phone as a till for this business' : 'Use this computer as a till for this business'),
         h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: prefs.get('autoLogout', true), onchange: (e) => prefs.set('autoLogout', e.target.checked) }), 'Sign the cashier out automatically after each sale (shows the change to give first)'),
+        hasScreenLock() ? h('label', { class: 'check' }, h('input', { type: 'checkbox', checked: screenLockEnabled, onchange: async (e) => { const r = await window.pos.setCashierFullscreen({ on: e.target.checked }); if (!r.ok) { e.target.checked = !e.target.checked; return toast(r.error, true); } toast(e.target.checked ? 'Cashiers will work in full screen.' : 'Cashier full screen is off.'); } }), 'Cashiers work in full screen: they can’t leave the app; a manager’s PIN or password is needed to exit') : null,
         h('div', { class: 'muted small' }, isPhone() ? 'On the PIN screen, press and hold “Tap your name” for 2 seconds to open the normal username/password sign-in (for the owner, or to switch business).' : 'On the PIN screen, press Ctrl + Shift + L (or press and hold “Tap your name”) to open the normal username/password sign-in (for the owner, or to switch business).'))
     : null;
 

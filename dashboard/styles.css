@@ -542,3 +542,4 @@ table.tt tr.tt-break td, table.tt tr.tt-break th { background: var(--bg); }
   body.demo .pos, body.demo .cart { height: calc(100vh - 58px); }
 }
 .demo-pick a { color: var(--accent); font-weight: 600; }
+.danger-zone { border: 1px solid #f0c2bb; }

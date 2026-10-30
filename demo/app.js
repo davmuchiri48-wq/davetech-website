@@ -2029,6 +2029,44 @@ function editUser(u) {
 }
 
 // ================= settings =================
+// Settings → Start fresh (system owner): clear everything on this computer / phone to set it up for a new customer.
+function startFreshCard() {
+  const where = isPhone() ? 'this phone' : 'this computer';
+  return h('div', { class: 'card pad danger-zone', style: 'display:flex;flex-direction:column;gap:10px' },
+    h('h2', {}, 'Start fresh'),
+    h('div', { class: 'muted' }, `Removes every business, user, product, sale, customer, pupil and fee record on ${where}, so you can set it up for a new customer. The app then opens on the first-time setup screen.`),
+    h('div', {}, h('button', { class: 'btn danger', onclick: startFresh }, 'Start fresh…')));
+}
+
+async function startFresh() {
+  const where = isPhone() ? 'this phone' : 'this computer';
+  const biz = (await tryApi('loginOptions')) || [];
+  const body = h('div', { class: 'stack', style: 'gap:12px' },
+    h('div', { class: 'notice' }, h('b', {}, 'This removes ALL data on ', where, ':'), ' ', biz.length ? biz.map((b) => b.name).join(', ') : 'every business', ', with their users, sales, stock, customers, pupils, fees and exams.'),
+    h('div', { class: 'muted small' }, 'A safety copy is saved first (in the backups folder) in case you need it back: Settings → Backups → Restore. Businesses linked to the online dashboard stay there; delete them in the dashboard if they were only for testing.'),
+    field('Your owner password', inp('password', '', { type: 'password', autocomplete: 'current-password' })),
+    field('Type START FRESH to confirm', inp('confirm', '', { placeholder: 'START FRESH', autocapitalize: 'characters', autocomplete: 'off', spellcheck: false })));
+  modal({
+    title: 'Start fresh',
+    body,
+    foot: (close) => [
+      h('span', { class: 'spacer' }),
+      h('button', { class: 'btn', onclick: close }, 'Cancel'),
+      h('button', { class: 'btn danger', onclick: async () => {
+        const d = formData(body);
+        const r = await window.pos.startFresh({ password: d.password, confirm: d.confirm });
+        if (!r.ok) return toast(r.error, true);
+        close();
+        for (const k of ['tillTenant', 'lastTenant']) prefs.set(k, null);
+        Object.assign(S, { session: null, user: null, tenant: null, cart: null, dash: null });
+        if (typeof SCH !== 'undefined') SCH.info = null;
+        toast('Everything was cleared. Set up the new customer.');
+        boot();
+      } }, 'Remove everything'),
+    ],
+  });
+}
+
 // Settings → Logo & colours: shown on screens, receipts, report cards, ID cards and the school website.
 function brandingCard(t) {
   const st = { logo: t.logo || '', brand: t.brand || 'davetech' };
@@ -2134,7 +2172,7 @@ async function pageSettings(main) {
   const online = can('admin') ? await cloudCard() : null;
   const move = can('admin') ? importCard() : null;
 
-  add(wrap, h('div', { class: 'page-head' }, h('h1', {}, 'Settings')), biz, brandingCard(t), online, pr, till, acct, data, move);
+  add(wrap, h('div', { class: 'page-head' }, h('h1', {}, 'Settings')), biz, brandingCard(t), online, pr, till, acct, data, move, S.user.role === 'owner' && !isDemo() ? startFreshCard() : null);
   add(main, wrap);
 }
 

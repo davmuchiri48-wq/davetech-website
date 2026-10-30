@@ -543,3 +543,4 @@ table.tt tr.tt-break td, table.tt tr.tt-break th { background: var(--bg); }
 }
 .demo-pick a { color: var(--accent); font-weight: 600; }
 .danger-zone { border: 1px solid #f0c2bb; }
+.input.locked { display: flex; align-items: center; background: var(--bg); color: var(--ink); font-weight: 600; }

@@ -2106,6 +2106,39 @@ function brandingCard(t) {
   return box;
 }
 
+// Business type change: the customer reads a code to Daalpha Systems and types in the answer.
+async function changeBusinessType(t) {
+  const st = await tryApi('changeTypeStart');
+  if (!st) return;
+  const types = Object.entries(S.status.businessTypes).filter(([k]) => k !== t.business_type);
+  const body = h('div', { class: 'stack', style: 'gap:12px' },
+    h('div', { class: 'muted' }, 'The business type decides which screens this business has. To change it, call or WhatsApp Daalpha Systems and read them this code:'),
+    h('div', { class: 'recovery-code' }, st.code),
+    field('New business type', sel('business_type', types, types[0] && types[0][0])),
+    field('Answer code from Daalpha Systems', inp('answer', '', { placeholder: 'XXXX-XXXX', autocapitalize: 'characters', autocomplete: 'off', spellcheck: false })),
+    h('div', { class: 'muted small' }, 'Products, sales and customers stay. Features go back to the new type’s defaults.'));
+  modal({
+    title: 'Change business type',
+    body,
+    foot: (close) => [
+      h('span', { class: 'spacer' }),
+      h('button', { class: 'btn', onclick: close }, 'Cancel'),
+      h('button', { class: 'btn primary', onclick: async () => {
+        const d = formData(body);
+        const r = await tryApi('changeTypeFinish', { business_type: d.business_type, answer: d.answer });
+        if (!r) return;
+        close();
+        toast('Business type changed to ' + r.type_label + '.');
+        S.tenant = r;
+        S.feats = r.features;
+        if (typeof SCH !== 'undefined') SCH.info = null;
+        await loadCatalog();
+        renderShell();
+      } }, 'Change type'),
+    ],
+  });
+}
+
 async function pageSettings(main) {
   const t = await api('getSettings');
   const wrap = h('div', { class: 'page' });
@@ -2114,7 +2147,8 @@ async function pageSettings(main) {
   const biz = h('div', { class: 'card pad', style: 'display:flex;flex-direction:column;gap:12px' });
   add(biz, 
     h('h2', {}, 'Business'),
-    h('div', { class: 'grid2' }, field('Business name', inp('name', t.name)), field('Business type', sel('business_type', types, t.business_type))),
+    h('div', { class: 'grid2' }, field('Business name', inp('name', t.name)),
+      field('Business type', h('div', { class: 'row', style: 'gap:8px' }, h('div', { class: 'input locked', style: 'flex:1' }, '🔒 ', t.type_label || t.business_type), can('admin') ? h('button', { class: 'btn', onclick: () => changeBusinessType(t) }, 'Change…') : null))),
     h('div', { class: 'grid3' }, field('Phone', inp('phone', t.phone)), field('Email', inp('email', t.email)), field('KRA PIN', inp('kra_pin', t.kra_pin))),
     field('Address', inp('address', t.address)),
     h('div', { class: 'grid3' }, field('M-Pesa Till number (Buy Goods)', inp('mpesa_till', t.mpesa_till || '', { inputmode: 'numeric', placeholder: 'e.g. 5123456' })), field('M-Pesa Paybill (optional)', inp('mpesa_paybill', t.mpesa_paybill || '', { inputmode: 'numeric', placeholder: 'e.g. 247247' })), field('Paybill account no.', inp('mpesa_account', t.mpesa_account || '', { placeholder: isSchool() ? 'blank = pupil’s admission no.' : 'e.g. your phone no.' }))),
@@ -2123,23 +2157,19 @@ async function pageSettings(main) {
     field('Receipt footer', inp('receipt_footer', t.receipt_footer)),
     h('div', { class: 'grid2' }, field('Max discount a cashier may give (%)', inp('cashier_max_discount', t.cashier_max_discount, { type: 'number' })), h('div', { style: 'align-self:end' }, chk('allow_negative_stock', 'Allow selling when stock shows zero', t.allow_negative_stock))),
     h('div', { class: 'section-title' }, 'Features'),
-    h('div', { class: 'grid3', id: 'feats' }, Object.entries(featLabels).map(([k, l]) => h('label', { class: 'check' }, h('input', { type: 'checkbox', 'data-feat': k, checked: t.features[k] }), l))),
-    h('div', { class: 'muted small' }, 'Changing the business type resets these to that type’s defaults when you save, unless you also tick/untick them.'),
+    h('div', { class: 'grid3', id: 'feats' }, Object.entries(featLabels).map(([k, l]) => h('label', { class: 'check', title: k === 'school' ? 'Set by Daalpha Systems' : '' }, h('input', { type: 'checkbox', 'data-feat': k, checked: t.features[k], 'data-locked': k === 'school' ? '1' : null }), k === 'school' ? '🔒 ' + l : l))),
+    h('div', { class: 'muted small' }, 'The business type and the school module are set by Daalpha Systems. Changing them needs a code from Daalpha Systems.'),
     can('admin')
       ? h('div', {}, h('button', { class: 'btn primary', onclick: async () => {
           const d = formData(biz);
           const features = {};
-          biz.querySelectorAll('[data-feat]').forEach((el) => (features[el.dataset.feat] = el.checked));
-          if (d.business_type !== t.business_type) {
-            // only send features the user changed from what was shown, so type defaults apply otherwise
-            Object.keys(features).forEach((k) => { if (features[k] === t.features[k]) delete features[k]; });
-          }
+          biz.querySelectorAll('[data-feat]').forEach((el) => { if (!el.dataset.locked) features[el.dataset.feat] = el.checked; });
           const r = await tryApi('saveSettings', { ...d, features });
           if (r) { toast('Settings saved.'); S.tenant = r; S.feats = r.features; renderShell(); }
         } }, 'Save settings'))
       : h('div', { class: 'muted small' }, 'Only an admin can change these.')
   );
-  biz.querySelectorAll('input,select').forEach((el) => (el.disabled = !can('admin')));
+  biz.querySelectorAll('input,select').forEach((el) => (el.disabled = !can('admin') || el.dataset.locked === '1'));
 
   const pr = await printerCard();
 

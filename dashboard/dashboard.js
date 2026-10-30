@@ -233,12 +233,12 @@
     // Daalpha Systems admin: answer codes for a customer's POS ("Forgot the owner password?" or "+ Add business").
     function recoveryAnswer() {
       const code = h('input', { class: 'input recovery-answer', placeholder: 'XXXX-XXXX', autocomplete: 'off', autocapitalize: 'characters', spellcheck: false });
-      const kind = h('select', { class: 'input' }, h('option', { value: 'addshop' }, 'Add a business on their POS'), h('option', { value: 'recovery' }, 'Reset their owner password'));
+      const kind = h('select', { class: 'input' }, h('option', { value: 'addshop' }, 'Add a business on their POS'), h('option', { value: 'recovery' }, 'Reset their owner password'), h('option', { value: 'changetype' }, 'Change their business type'));
       const out = h('div');
       const go = async () => {
         const r = await tryRpc('dash_unlock_answer', { p_code: code.value, p_kind: kind.value });
         if (!r) return;
-        const what = kind.value === 'addshop' ? 'They type it under “Answer code from Daalpha Systems” to add one business.' : 'They type it in, then choose a new owner password. It unlocks the whole POS, so check who is calling first.';
+        const what = kind.value === 'addshop' ? 'They type it under “Answer code from Daalpha Systems” to add one business.' : kind.value === 'changetype' ? 'They type it in Settings → Business type → Change…, after choosing the new type. Charge for the change if needed.' : 'They type it in, then choose a new owner password. It unlocks the whole POS, so check who is calling first.';
         put(out, h('div', { class: 'dash-code' }, h('div', { class: 'muted small' }, `Answer for ${r.code}`), h('div', { class: 'dash-code-val' }, r.answer), h('div', { class: 'muted small' }, what)));
       };
       code.addEventListener('keydown', (e) => e.key === 'Enter' && go());

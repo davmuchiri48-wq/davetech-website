@@ -485,6 +485,7 @@ async function openUnlockScreen({ quit = false } = {}) {
 async function boot() {
   if (window.pos && window.pos.demo) return demoBoot();
   await initScreenLock();
+  if (!S.appVersion && window.pos.appVersion) S.appVersion = ((await window.pos.appVersion()) || {}).data || '';
   S.status = await api('status');
   if (!S.status.setupDone) return renderSetup();
   renderLogin();
@@ -689,7 +690,9 @@ async function renderPinLogin(tid) {
   document.addEventListener('keydown', pinKeyHandler);
 
   draw();
-  mount(h('div', { class: 'pin-screen' }, list, h('div', { class: 'pin-centre' }, who, dots, msg, pad), hasScreenLock() ? kioskCorner() : null));
+  // visible way to the username / password sign-in (owner, admin, or to switch business)
+  const ownerBtn = h('button', { class: 'btn sm pin-owner', onclick: () => { document.removeEventListener('keydown', pinKeyHandler); renderLogin(true); } }, '🔑 Owner / manager sign-in');
+  mount(h('div', { class: 'pin-screen' }, h('div', { class: 'pin-left' }, list, ownerBtn), h('div', { class: 'pin-centre' }, who, dots, msg, pad), hasScreenLock() ? kioskCorner() : null));
 }
 
 async function enter() {
@@ -868,7 +871,7 @@ function renderShell() {
     NAV.filter((n) => n[3]()).map(([id, ico, label]) =>
       h('button', { class: 'nav' + (S.page === id ? ' on' : ''), onclick: () => go(id) }, h('span', { class: 'ico' }, ico), id === 'customers' && S.tenant.business_type === 'canteen' ? 'Students' : id === 'customers' && S.tenant.business_type === 'salon' ? 'Clients' : typeof label === 'function' ? label() : label, badgeFor(id))
     ),
-    h('div', { class: 'who' }, h('b', {}, S.user.name), h('div', { class: 'muted', style: 'color:inherit;opacity:.7' }, S.user.title || roleLabel(S.user.role)), h('button', { class: 'btn sm', style: 'margin-top:8px', onclick: logout }, 'Sign out'), S.screenLocked ? h('button', { class: 'btn sm kiosk-exit', onclick: () => openUnlockScreen() }, '🔒 Exit full screen') : null)
+    h('div', { class: 'who' }, h('b', {}, S.user.name), h('div', { class: 'muted', style: 'color:inherit;opacity:.7' }, S.user.title || roleLabel(S.user.role)), h('button', { class: 'btn sm', style: 'margin-top:8px', onclick: logout }, 'Sign out'), S.appVersion ? h('div', { class: 'app-ver' }, 'Daalpha Systems ' + S.appVersion) : null, S.screenLocked ? h('button', { class: 'btn sm kiosk-exit', onclick: () => openUnlockScreen() }, '🔒 Exit full screen') : null)
   );
   const main = h('main', { class: 'main', id: 'main' });
   const navLabel = (NAV.find((n) => n[0] === S.page) || [])[2] || '';

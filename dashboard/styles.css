@@ -208,7 +208,11 @@ table.list .num { text-align: right; }
 
 /* ---------- till PIN screen ---------- */
 .pin-screen { height: 100vh; display: grid; grid-template-columns: minmax(260px, 30%) 1fr; background: radial-gradient(circle at 70% 20%, #2a2480, var(--side) 65%); color: #fff; }
-.pin-staff { background: rgba(0, 0, 0, 0.18); border-right: 1px solid rgba(255, 255, 255, 0.08); overflow-y: auto; padding: 18px 14px; display: flex; flex-direction: column; gap: 8px; }
+.pin-left { display: flex; flex-direction: column; min-height: 0; background: rgba(0, 0, 0, 0.18); border-right: 1px solid rgba(255, 255, 255, 0.08); }
+.pin-staff { flex: 1; overflow-y: auto; padding: 18px 14px; display: flex; flex-direction: column; gap: 8px; }
+.pin-owner { margin: 10px 14px 16px; background: rgba(255, 255, 255, 0.1); color: #fff !important; border-color: rgba(255, 255, 255, 0.25); }
+.pin-owner:hover { background: rgba(255, 255, 255, 0.2); }
+.app-ver { margin-top: 8px; font-size: 11px; opacity: 0.5; }
 .pin-person { display: flex; align-items: center; gap: 14px; width: 100%; padding: 14px 16px; border-radius: 14px; border: 2px solid transparent; background: rgba(255, 255, 255, 0.06); color: #fff; cursor: pointer; text-align: left; font-size: 18px; font-weight: 600; transition: background 0.12s, border-color 0.12s; }
 .pin-person:hover { background: rgba(255, 255, 255, 0.12); }
 .pin-person.on { background: rgba(255, 255, 255, 0.16); border-color: #f0372a; }
@@ -323,6 +327,8 @@ table.list .num { text-align: right; }
 
   /* till PIN screen: staff across the top, keypad below */
   .pin-screen { grid-template-columns: 1fr; grid-template-rows: auto 1fr; height: 100dvh; }
+  .pin-left { border-right: 0; }
+  .pin-owner { margin: 0 10px 10px; align-self: flex-start; }
   .pin-staff { flex-direction: row; overflow-x: auto; overflow-y: hidden; border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.08); padding: max(12px, env(safe-area-inset-top)) 10px 12px; gap: 8px; }
   .pin-person { flex-direction: column; width: auto; min-width: 92px; padding: 10px 8px; gap: 6px; font-size: 13px; text-align: center; }
   .pin-name { white-space: normal; max-width: 90px; line-height: 1.2; }

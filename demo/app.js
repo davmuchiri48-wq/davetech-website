@@ -930,6 +930,35 @@ function pagePos(main) {
   if (!isPhone()) setTimeout(() => search.focus(), 20);
 }
 
+// ----- till look: a picture for every product (its photo, or an icon on its category's colour) -----
+const CAT_TONES = [['#fde8ea', '#c62842'], ['#e5efff', '#2b5fc9'], ['#e3f5ea', '#1d8a4c'], ['#fff1d9', '#b86e00'], ['#f0e7ff', '#7339c4'], ['#dff4f4', '#0f7f80'], ['#ffe6f2', '#bd2f7a'], ['#eceef3', '#4a5368']];
+const catTone = (catId) => {
+  const i = (S.categories || []).findIndex((c) => c.id === catId);
+  return CAT_TONES[(i < 0 ? CAT_TONES.length - 1 : i) % CAT_TONES.length];
+};
+const ICONS = [
+  [/\b(tea|chai)\b/, '🍵'], [/coffee|latte|cappuc/, '☕'], [/juice/, '🧃'], [/soda|coke|fanta|sprite|energy/, '🥤'], [/water/, '💧'], [/milk|mala|yogh?urt/, '🥛'],
+  [/beer|lager|tusker|guinness|pilsner|white ?cap|balozi|cider/, '🍺'], [/wine/, '🍷'], [/gin|vodka|whisk|cane|rum|brandy|spirit|chrome/, '🥃'],
+  [/chips|fries/, '🍟'], [/chicken|kuku/, '🍗'], [/beef|stew|nyama|meat|goat|mbuzi|choma/, '🍖'], [/fish|samaki|tilapia/, '🐟'], [/rice|pilau|biryani/, '🍚'], [/ugali|sukuma|githeri|chapati/, '🍽'],
+  [/smokie|sausage|hot ?dog/, '🌭'], [/samosa/, '🥟'], [/mandazi|bread|bun|scone/, '🍞'], [/omelet|egg/, '🍳'], [/cake/, '🍰'], [/pizza/, '🍕'], [/burger/, '🍔'], [/salad|vegetable/, '🥗'], [/fruit|banana|apple|orange/, '🍎'],
+  [/sugar|salt/, '🧂'], [/flour|unga|maize/, '🌾'], [/oil/, '🫒'], [/soap|detergent|omo/, '🧼'], [/tissue|toilet/, '🧻'], [/biscuit|cookie/, '🍪'], [/sweet|candy/, '🍬'], [/matchbox|match/, '🔥'],
+  [/hair|cut|braid|blow|barber|shave|beard|wash/, '✂️'], [/nail|manicure|pedicure|polish/, '💅'], [/eyebrow|make ?up|facial/, '💄'], [/shampoo|hair food|lotion|cream/, '🧴'],
+  [/mg\b|tablet|capsule|syrup|paracetamol|ibuprofen|amoxi|ors|antibiotic/, '💊'], [/sanitizer|mask|glove/, '🧴'],
+  [/book|exercise/, '📒'], [/pen\b|pencil/, '✏️'], [/mathematical|ruler/, '📐'], [/sweater|shirt|shorts|skirt|socks|uniform|coat|overall|t-shirt/, '👕'], [/flash|usb/, '💾'],
+];
+const productIcon = (name) => {
+  const n = String(name || '').toLowerCase();
+  const hit = ICONS.find(([re]) => re.test(n));
+  return hit ? hit[1] : null;
+};
+const initials2 = (name) => String(name || '?').split(/\s+/).filter((w) => /^[A-Za-z]/.test(w)).slice(0, 2).map((w) => w[0].toUpperCase()).join('') || '?';
+function productPic(p, cls = 'pic') {
+  if (p.photo) return h('div', { class: cls + ' photo', style: `background-image:url("${p.photo}")` });
+  const [bg, fg] = catTone(p.category_id);
+  const ico = productIcon(p.name);
+  return h('div', { class: cls, style: `background:${bg};color:${fg}` }, ico ? h('span', { class: 'emo' }, ico) : h('span', { class: 'ini' }, initials2(p.name)));
+}
+
 function filteredProducts(q) {
   q = (q || '').toLowerCase();
   return S.products.filter(
@@ -942,7 +971,7 @@ function renderChips() {
   if (!el) return;
   put(el, 
     h('button', { class: 'chip' + (!S.catFilter ? ' on' : ''), onclick: () => { S.catFilter = null; renderChips(); renderTiles(); } }, 'All'),
-    S.categories.map((c) => h('button', { class: 'chip' + (S.catFilter === c.id ? ' on' : ''), onclick: () => { S.catFilter = c.id; renderChips(); renderTiles(); } }, c.name))
+    S.categories.map((c) => h('button', { class: 'chip' + (S.catFilter === c.id ? ' on' : ''), onclick: () => { S.catFilter = c.id; renderChips(); renderTiles(); } }, h('i', { class: 'dot', style: `background:${catTone(c.id)[1]}` }), c.name))
   );
 }
 
@@ -959,12 +988,18 @@ function renderTiles() {
       const tracked = S.feats.stock && p.track_stock;
       const have = S.feats.batches ? p.sellable : p.stock; // pharmacies: only stock with a valid batch can be sold
       const out = tracked && have <= 0;
+      const low = tracked && !out && p.reorder_level > 0 && have <= p.reorder_level;
+      const inCart = S.cart && S.cart.items.filter((i) => i.product_id === p.id).reduce((n, i) => n + Number(i.qty || 0), 0);
       return h(
         'button',
         { class: 'tile' + (out ? ' out' : ''), onclick: () => addToCart(p) },
-        h('div', { class: 'nm' }, p.name),
-        h('div', { class: 'row' }, h('span', { class: 'pr' }, money(p.price)), h('span', { class: 'spacer' }), p.requires_prescription ? h('span', { class: 'badge warn' }, 'Rx') : null),
-        tracked ? h('div', { class: 'st' }, out ? (S.feats.batches && p.unbatched > 0 ? 'No batch — can’t sell' : 'Out of stock') : `${qtyFmt(have)} ${p.unit} in stock`) : null
+        productPic(p),
+        inCart ? h('span', { class: 'in-cart' }, qtyFmt(inCart)) : null,
+        p.requires_prescription ? h('span', { class: 'rx' }, 'Rx') : null,
+        h('div', { class: 'info' },
+          h('div', { class: 'nm' }, p.name),
+          h('div', { class: 'row' }, h('span', { class: 'pr' }, money(p.price)), h('span', { class: 'spacer' }),
+            tracked ? h('span', { class: 'st ' + (out ? 'out' : low ? 'low' : 'ok') }, out ? (S.feats.batches && p.unbatched > 0 ? 'No batch' : 'Out') : `${qtyFmt(have)} left`) : null))
       );
     })
   );
@@ -973,6 +1008,7 @@ function renderTiles() {
 function renderCart() {
   const el = $('#cart');
   if (!el) return;
+  renderTiles(); // keeps the "in cart" counts on the product pictures right
   const c = S.cart;
   const total = cartTotal();
   const head = h(
@@ -1017,7 +1053,7 @@ function renderCart() {
             h('div', { style: 'text-align:right' }, h('button', { class: 'btn ghost sm danger', onclick: (e) => { e.stopPropagation(); removeLine(i); } }, 'Remove'))
           )
         )
-      : h('div', { class: 'empty' }, 'Cart is empty.', h('br'), h('span', { class: 'small' }, 'Tap a product or scan a barcode.'))
+      : h('div', { class: 'cart-empty' }, h('div', { class: 'ce-ico' }, '🛒'), h('b', {}, 'No items yet'), h('span', { class: 'muted small' }, S.feats.barcode ? 'Tap a product or scan a barcode.' : 'Tap a product to add it.'))
   );
   const foot = h(
     'div',
@@ -1535,8 +1571,15 @@ async function editProduct(p, after) {
   const isNew = !p;
   p = p || { track_stock: S.feats.stock ? 1 : 0, unit: 'pc', active: 1 };
   const body = h('div', { style: 'display:flex;flex-direction:column;gap:12px' });
+  let photo = p.photo || '';
+  const photoBox = h('div', { class: 'photo-box' });
+  const drawPhoto = () => put(photoBox, productPic({ ...p, photo, name: p.name || 'New' }, 'pic big'));
+  drawPhoto();
   add(body, 
-    field('Name', inp('name', p.name, { autofocus: true })),
+    h('div', { class: 'row', style: 'gap:14px;align-items:flex-start' },
+      photoBox,
+      h('div', { style: 'flex:1;display:flex;flex-direction:column;gap:12px' }, field('Name', inp('name', p.name, { autofocus: true })),
+        h('div', { class: 'row', style: 'gap:8px' }, h('button', { class: 'btn sm', onclick: async () => { const u = await pickPhoto(320, 0.78); if (u) { photo = u; drawPhoto(); } } }, '📷 Photo'), h('button', { class: 'btn sm', onclick: () => { photo = ''; drawPhoto(); } }, 'Remove photo'), h('span', { class: 'muted small' }, 'Optional. Shows on the till.')))),
     h('div', { class: 'grid2' }, field('Category', sel('category_id', [['', '— none —'], ...cats.map((c) => [c.id, c.name])], p.category_id)), field('Unit', inp('unit', p.unit, { placeholder: 'pc, kg, box, plate…' }))),
     h('div', { class: 'grid2' }, field('Selling price (VAT incl.)', inp('price', p.price, { type: 'number', step: '0.01', min: 0 })), field('Buying cost', inp('cost', p.cost, { type: 'number', step: '0.01', min: 0 }))),
     h('div', { class: 'grid2' }, S.feats.barcode ? field('Barcode', inp('barcode', p.barcode, { placeholder: 'Scan here' })) : null, field('SKU / code', inp('sku', p.sku)), field(`VAT % (blank = ${S.tenant.default_tax_rate}%)`, inp('tax_rate', p.tax_rate ?? '', { type: 'number', step: '0.01' }))),
@@ -1551,7 +1594,7 @@ async function editProduct(p, after) {
     body,
     foot: (close) => [
       h('button', { class: 'btn', onclick: close }, 'Cancel'),
-      h('button', { class: 'btn primary', onclick: async () => { const d = formData(body); if (isNew) d.active = true; d.category_id = d.category_id ? Number(d.category_id) : null; if (!S.feats.stock) d.track_stock = false; const r = await tryApi('saveProduct', { ...d, id: p.id }); if (r) { toast('Product saved.'); close(); await loadCatalog(); after && after(); } } }, 'Save'),
+      h('button', { class: 'btn primary', onclick: async () => { const d = formData(body); if (isNew) d.active = true; d.category_id = d.category_id ? Number(d.category_id) : null; if (!S.feats.stock) d.track_stock = false; const r = await tryApi('saveProduct', { ...d, id: p.id, photo: photo === (p.photo || '') ? undefined : photo }); if (r) { toast('Product saved.'); close(); await loadCatalog(); after && after(); } } }, 'Save'),
     ],
   });
 }

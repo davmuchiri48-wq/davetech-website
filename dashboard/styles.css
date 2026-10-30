@@ -521,3 +521,24 @@ table.tt tr.tt-break td, table.tt tr.tt-break th { background: var(--bg); }
   .class-grid { grid-template-columns: 1fr; }
 }
 @media (max-width: 760px) { .kpis > :last-child:nth-child(odd) { grid-column: span 2; } }
+
+/* ---------- online demo ---------- */
+.demo-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin: 12px 24px 0; padding: 9px 12px; border-radius: 10px; background: #fff7e0; border: 1px solid #f1d58a; font-size: 13px; }
+.demo-bar a.btn { text-decoration: none; }
+.demo-pick { max-width: 760px; }
+.demo-types { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin: 16px 0; }
+.demo-type { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; text-align: left; padding: 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); cursor: pointer; transition: border-color 0.12s; }
+.demo-type:hover, .demo-type:focus-visible { border-color: var(--accent); outline: none; }
+.demo-type b { font-size: 15px; }
+.demo-ico { font-size: 26px; }
+.demo-wait { display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 40px 10px; text-align: center; }
+.demo-paper { background: #fff; color: #111; font: 13px/1.35 Consolas, 'DejaVu Sans Mono', monospace; padding: 14px 10px 26px; box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15); max-width: 100%; overflow-x: auto; white-space: pre; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 8px), 95% 100%, 90% calc(100% - 8px), 85% 100%, 80% calc(100% - 8px), 75% 100%, 70% calc(100% - 8px), 65% 100%, 60% calc(100% - 8px), 55% 100%, 50% calc(100% - 8px), 45% 100%, 40% calc(100% - 8px), 35% 100%, 30% calc(100% - 8px), 25% 100%, 20% calc(100% - 8px), 15% 100%, 10% calc(100% - 8px), 5% 100%, 0 calc(100% - 8px)); }
+.demo-paper .b { font-weight: 700; }
+.demo-paper .big { font-size: 18px; font-weight: 700; }
+.demo-frame { width: 100%; height: 70vh; border: 1px solid var(--line); border-radius: 8px; background: #fff; }
+@media (max-width: 760px) { .demo-bar { margin: 10px 12px 0; } }
+@media (min-width: 761px) {
+  .demo-bar { height: 46px; flex-wrap: nowrap; overflow: hidden; }
+  body.demo .pos, body.demo .cart { height: calc(100vh - 58px); }
+}
+.demo-pick a { color: var(--accent); font-weight: 600; }

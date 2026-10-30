@@ -271,3 +271,5 @@ details p { padding: 0 0 18px; color: var(--mute); max-width: 68ch; }
   .top .btn.small { padding-left: 14px; padding-right: 14px; }
 }
 @media (min-width: 761px) and (max-width: 1060px) { .top .hide-sm { display: none; } }
+/* the header already has a "Try the demo" button; the menu copy is for phones */
+@media (min-width: 1061px) { .menu .menu-demo { display: none; } }
